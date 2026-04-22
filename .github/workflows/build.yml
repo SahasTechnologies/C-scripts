@@ -1,4 +1,4 @@
-name: Matrix Build for All Platforms
+name: build the thingamabobby
 
 on:
   push:
@@ -15,23 +15,23 @@ jobs:
           - os: ubuntu-latest
             cc: gcc
             calc_out: calculator-linux
-            count_out: counter-linux
+            wc_out: wordcounter-linux
 
           - os: macos-latest
             cc: clang
             calc_out: calculator-macos
-            count_out: counter-macos
+            wc_out: wordcounter-macos
 
           - os: windows-latest
             cc: gcc
             calc_out: calculator.exe
-            count_out: counter.exe
+            wc_out: wordcounter.exe
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install MinGW on Windows
+      - name: Install MinGW
         if: matrix.os == 'windows-latest'
         uses: egor-tensin/setup-mingw@v2
         with:
@@ -40,7 +40,7 @@ jobs:
       - name: Build programs
         run: |
           ${{ matrix.cc }} calculator.c -o ${{ matrix.calc_out }}
-          ${{ matrix.cc }} counter.c -o ${{ matrix.count_out }}
+          ${{ matrix.cc }} wordcounter.c -o ${{ matrix.wc_out }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -48,7 +48,7 @@ jobs:
           name: ${{ matrix.os }}
           path: |
             ${{ matrix.calc_out }}
-            ${{ matrix.count_out }}
+            ${{ matrix.wc_out }}
 
   release:
     needs: build
@@ -63,4 +63,4 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/* 
+          files: artifacts/**/*
