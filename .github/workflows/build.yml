@@ -1,4 +1,4 @@
-name: build the thingamabobby
+name: build the thingababobby
 
 on:
   push:
@@ -26,18 +26,28 @@ jobs:
             cc: gcc
             calc_out: calculator.exe
             wc_out: wordcounter.exe
+            windows: true
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install MinGW
-        if: matrix.os == 'windows-latest'
-        uses: egor-tensin/setup-mingw@v2
+      - name: Install MSYS2
+        if: matrix.windows
+        uses: msys2/setup-msys2@v2
         with:
-          platform: x64
+          update: true
+          install: mingw-w64-x86_64-gcc
 
-      - name: Build programs
+      - name: Build on Windows
+        if: matrix.windows
+        shell: msys2 {0}
+        run: |
+          gcc calculator.c -o ${{ matrix.calc_out }}
+          gcc wordcounter.c -o ${{ matrix.wc_out }}
+
+      - name: Build on Linux/macOS
+        if: ${{ !matrix.windows }}
         run: |
           ${{ matrix.cc }} calculator.c -o ${{ matrix.calc_out }}
           ${{ matrix.cc }} wordcounter.c -o ${{ matrix.wc_out }}
