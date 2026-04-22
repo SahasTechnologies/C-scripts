@@ -1,0 +1,66 @@
+name: Matrix Build for All Platforms
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+            calc_out: calculator-linux
+            count_out: counter-linux
+
+          - os: macos-latest
+            cc: clang
+            calc_out: calculator-macos
+            count_out: counter-macos
+
+          - os: windows-latest
+            cc: gcc
+            calc_out: calculator.exe
+            count_out: counter.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install MinGW on Windows
+        if: matrix.os == 'windows-latest'
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Build programs
+        run: |
+          ${{ matrix.cc }} calculator.c -o ${{ matrix.calc_out }}
+          ${{ matrix.cc }} counter.c -o ${{ matrix.count_out }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}
+          path: |
+            ${{ matrix.calc_out }}
+            ${{ matrix.count_out }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/* 
